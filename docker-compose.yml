@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  devnet:
+    image: ${DOCKER_USERNAME}/geth:latest
+    container_name: devnet
+    ports:
+      - "8545:8545"
+      - "30303:30303"
+    environment:
+      - NETWORK_ID=1337
+      - NODE_NAME=devnet-node
+    command: >
+      --networkid 1337
+      --nodiscover
+      --http
+      --http.addr 0.0.0.0
+      --http.port 8545
+      --http.api personal,eth,net,web3
+      --http.corsdomain "*"
+      --http.vhosts "*"
+      --miner.threads 1
+      --dev
