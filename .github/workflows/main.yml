@@ -1,0 +1,31 @@
+name: Build and Publish Docker Image
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [closed]
+
+jobs:
+  build-and-push:
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'CI:Build')
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: Build and push Docker image
+      run: |
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/geth:latest .
+        docker push ${{ secrets.DOCKER_USERNAME }}/geth:latest
