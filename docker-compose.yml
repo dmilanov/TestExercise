@@ -16,8 +16,32 @@ services:
       --http
       --http.addr 0.0.0.0
       --http.port 8545
-      --http.api personal,eth,net,web3
-      --http.corsdomain "*"
-      --http.vhosts "*"
-      --miner.threads 1
-      --dev
+
+  blockscout:
+    image: blockscout/blockscout:latest
+    container_name: blockscout
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: postgres://postgres:password@postgres:5432/blockscout
+      ETHEREUM_JSONRPC_HTTP_URL: http://devnet:8545
+      ETHEREUM_JSONRPC_WS_URL: ws://devnet:8546
+      NETWORK: Devnet
+      SUBNETWORK: Devnet
+      COIN: ETH
+    depends_on:
+      - devnet
+      - postgres
+
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: blockscout
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
