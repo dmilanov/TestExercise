@@ -4,38 +4,43 @@ on:
   pull_request:
     types: [closed]
 
-
 jobs:
   deploy:
-    if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'CI:Deploy')
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
-    # Checkout the repository to the GitHub runner
+    - name: Check for CI:Deploy label
+      id: check_label
+      run: |
+        if ! echo "${{ github.event.pull_request.labels }}" | grep -q "CI:Deploy"; then
+          echo "Label CI:Deploy not found, skipping deployment."
+          exit 1
+        fi
+
     - name: Checkout repository
+      if: steps.check_label.outcome == 'success'
       uses: actions/checkout@v2
 
-    # Log in to Docker Hub
-    - name: Log in to Docker Hub
-      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+    - name: Set up Docker Buildx
+      if: steps.check_label.outcome == 'success'
+      uses: docker/setup-buildx-action@v1
 
-    # Build Docker image with predeployed contracts
-    - name: Build Docker image
-      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/geth:latest .
+    - name: Login to DockerHub
+      if: steps.check_label.outcome == 'success'
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
-    # Push Docker image to Docker Hub
-    - name: Push Docker image
-      run: docker push ${{ secrets.DOCKER_USERNAME }}/geth:latest
-
-    # Pull Docker image with predeployed contracts (optional, since we just pushed it)
-    - name: Pull Docker image with predeployed contracts
-      run: docker pull ${{ secrets.DOCKER_USERNAME }}/geth:latest
-
-    # Run Docker container with predeployed contracts
-    - name: Run Docker container with predeployed contracts
-      run: docker run -d --name predeployed-contracts ${{ secrets.DOCKER_USERNAME }}/geth:latest
-
-    # Run Hardhat tests inside the Docker container
-    - name: Run Hardhat tests
+    - name: Build and push Docker image
+      if: steps.check_label.outcome == 'success'
       run: |
+        docker build -t your-dockerhub-username/hardhat-geth:latest .
+        docker push your-dockerhub-username/hardhat-geth:latest
+
+    - name: Run Hardhat tests in Docker container
+      if: steps.check_label.outcome == 'success'
+      run: |
+        docker run --name predeployed-contracts -d your-dockerhub-username/hardhat-geth:latest
         docker exec predeployed-contracts sh -c "cd /app && npx hardhat test"
