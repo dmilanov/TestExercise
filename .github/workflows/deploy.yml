@@ -38,4 +38,4 @@ jobs:
     # Run Hardhat tests inside the Docker container
     - name: Run Hardhat tests
       run: |
-        docker exec predeployed-contracts sh -c "cd / && npx hardhat test"
+        docker exec predeployed-contracts sh -c "cd /app && npx hardhat test"
