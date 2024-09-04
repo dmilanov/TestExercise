@@ -1,0 +1,41 @@
+name: Deploy Hardhat Project
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+    labels:
+      - CI:Deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install dependencies
+      run: npm install
+      working-directory: ./hardhat
+
+    - name: Run local devnet
+      run: docker run -d --name devnet -p 8545:8545 ethereum/client-go:latest --dev
+
+    - name: Deploy contracts
+      run: npx hardhat run scripts/deploy.js --network localhost
+      working-directory: ./hardhat
+
+    - name: Build Docker image
+      run: |
+        docker commit devnet myregistry/devnet-with-contracts:latest
+        docker push myregistry/devnet-with-contracts:latest
+
+    - name: Clean up
+      run: docker stop devnet && docker rm devnet
