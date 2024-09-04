@@ -15,6 +15,9 @@ WORKDIR /go-ethereum
 COPY go.mod .
 COPY go.sum .
 
+# Debugging step: Print Go environment
+RUN go env
+
 # Download Go dependencies
 RUN go mod download
 
