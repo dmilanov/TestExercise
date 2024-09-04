@@ -10,31 +10,22 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    env:
-      DOCKER_USERNAME: ${DOCKER_USERNAME}  # Set your Docker username here
-
     steps:
     # Checkout the repository to the GitHub runner
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    # Set up Node.js environment
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
-
-    # Install project dependencies
-    - name: Install dependencies
-      run: npm install
+    # Log in to Docker Hub
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
     # Pull Docker image with predeployed contracts
     - name: Pull Docker image with predeployed contracts
-      run: docker pull ${DOCKER_USERNAME}/geth:latest
+      run: docker pull ${{ secrets.DOCKER_USERNAME }}/geth:latest
 
     # Run Docker container with predeployed contracts
     - name: Run Docker container with predeployed contracts
-      run: docker run -d --name predeployed-contracts ${DOCKER_USERNAME}/geth:latest
+      run: docker run -d --name predeployed-contracts ${{ secrets.DOCKER_USERNAME }}/geth:latest
 
     # Run Hardhat tests inside the Docker container
     - name: Run Hardhat tests
