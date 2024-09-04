@@ -27,13 +27,13 @@ jobs:
 
     # Pull Docker image with predeployed contracts
     - name: Pull Docker image with predeployed contracts
-      run: docker pull <your-docker-image>
+      run: docker pull ${DOCKER_USERNAME}/geth:latest
 
     # Run Docker container with predeployed contracts
     - name: Run Docker container with predeployed contracts
-      run: docker run -d --name predeployed-contracts <your-docker-image>
+      run: docker run -d --name predeployed-contracts ${DOCKER_USERNAME}/geth:latest
 
     # Run Hardhat tests inside the Docker container
     - name: Run Hardhat tests
       run: |
-        docker exec predeployed-contracts bash -c "cd /path/to/your/hardhat/project && npx hardhat test"
+        docker exec predeployed-contracts bash -c "cd / && npx hardhat test"
