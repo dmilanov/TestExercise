@@ -1,46 +1,33 @@
-# Stage 1: Build Geth and install Node.js and Hardhat
-FROM golang:1.16 as builder
+# Support setting various labels on the final image
+ARG COMMIT=""
+ARG VERSION=""
+ARG BUILDNUM=""
 
-# Install Node.js and npm
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
-    apt-get install -y nodejs
+# Build Geth in a stock Go builder container
+FROM golang:1.23-alpine as builder
 
-# Install Hardhat globally
-RUN npm install -g hardhat
+RUN apk add --no-cache gcc musl-dev linux-headers git
 
-# Set the working directory
-WORKDIR /go-ethereum
+# Get dependencies - will also be cached if we won't change go.mod/go.sum
+COPY go.mod /go-ethereum/
+COPY go.sum /go-ethereum/
+RUN cd /go-ethereum && go mod download
 
-# Copy go.mod and go.sum to the working directory
-COPY go.mod .
-COPY go.sum .
+ADD . /go-ethereum
+RUN cd /go-ethereum && go run build/ci.go install -static ./cmd/geth
 
-# Download Go dependencies
-RUN go mod download
-
-# Copy the rest of the project files
-COPY . .
-
-# Build Geth
-RUN go run build/ci.go install -static ./cmd/geth
-
-# Stage 2: Create a lightweight deployment container
+# Pull Geth into a second stage deploy alpine container
 FROM alpine:latest
 
-# Install necessary packages
 RUN apk add --no-cache ca-certificates
-
-# Copy the Geth binary from the builder stage
 COPY --from=builder /go-ethereum/build/bin/geth /usr/local/bin/
 
-# Copy the project files (including Node.js and Hardhat)
-COPY --from=builder /go-ethereum /app
+EXPOSE 8545 8546 30303 30303/udp
+ENTRYPOINT ["geth"]
 
-# Set the working directory
-WORKDIR /app
+# Add some metadata labels to help programmatic image consumption
+ARG COMMIT=""
+ARG VERSION=""
+ARG BUILDNUM=""
 
-# Expose necessary ports
-EXPOSE 8545 30303
-
-# Command to run Geth
-CMD ["geth", "--networkid", "1337", "--nodiscover", "--http", "--http.addr", "0.0.0.0", "--http.port", "8545"]
+LABEL commit="$COMMIT" version="$VERSION" buildnum="$BUILDNUM"
