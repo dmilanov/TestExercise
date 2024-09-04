@@ -13,7 +13,9 @@ jobs:
     - name: Check for CI:Deploy label
       id: check_label
       run: |
-        if ! echo "${{ github.event.pull_request.labels }}" | grep -q "CI:Deploy"; then
+        labels=$(echo "${{ github.event.pull_request.labels }}" | jq -r '.[].name')
+        echo "Labels: $labels"
+        if ! echo "$labels" | grep -q "CI:Deploy"; then
           echo "Label CI:Deploy not found, skipping deployment."
           exit 1
         fi
