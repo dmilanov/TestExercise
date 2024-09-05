@@ -20,6 +20,7 @@ COPY package*.json /app/
 # Debugging step: List the contents of the /app directory
 RUN ls -la /app
 
+
 # Install npm dependencies for the Hardhat project
 RUN cd /app 
 RUN npm install
