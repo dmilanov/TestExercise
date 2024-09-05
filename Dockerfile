@@ -1,3 +1,8 @@
+# Support setting various labels on the final image
+ARG COMMIT=""
+ARG VERSION=""
+ARG BUILDNUM=""
+
 # Build Geth in a stock Go builder container
 FROM golang:1.23-alpine as builder
 
@@ -20,13 +25,14 @@ COPY package*.json /app/
 # Debugging step: List the contents of the /app directory
 RUN ls -la /app
 
-RUN chown -R app /app
 # Install npm dependencies for the Hardhat project
-RUN cd /app 
-RUN npm install
+RUN cd /app && npm install
 
 # Copy the rest of the project files to the /app directory
 COPY . /app
+
+# Debugging step: List the contents of the /app directory after copying
+RUN ls -la /app
 
 # Pull Geth into a second stage deploy alpine container
 FROM alpine:latest
