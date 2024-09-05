@@ -4,11 +4,16 @@
   "description": "DevopstestHardhat project",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "hardhat test"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "hardhat": "^2.3.3"
+    "hardhat": "^2.3.3",
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "chai": "^4.3.4",
+    "ethereum-waffle": "^3.3.0",
+    "ethers": "^5.4.0"
   }
 }
