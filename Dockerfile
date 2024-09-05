@@ -16,13 +16,15 @@ RUN cd /go-ethereum && go mod download
 ADD . /go-ethereum
 RUN cd /go-ethereum && go run build/ci.go install -static ./cmd/geth
 
-RUN npm install -g hardhat
-
 # Create the /app directory
 RUN mkdir -p /app
 
 # Copy the project files to the /app directory
 COPY . /app
+
+# Install npm dependencies for the Hardhat project
+RUN cd /app && npm install
+
 # Pull Geth into a second stage deploy alpine container
 FROM alpine:latest
 
@@ -34,8 +36,4 @@ EXPOSE 8545 8546 30303 30303/udp
 ENTRYPOINT ["geth"]
 
 # Add some metadata labels to help programmatic image consumption
-ARG COMMIT=""
-ARG VERSION=""
-ARG BUILDNUM=""
-
 LABEL commit="$COMMIT" version="$VERSION" buildnum="$BUILDNUM"
